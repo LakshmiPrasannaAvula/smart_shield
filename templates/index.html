@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Patient Monitoring System</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">&#128736;</span>
+                <h1>Smart Patient Monitoring</h1>
+            </div>
+            <nav class="nav">
+                <a href="/" class="nav-link active">Live Monitor</a>
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+            </nav>
+            <div class="status-badge" id="systemStatus">
+                <span class="status-dot"></span>
+                <span>System Ready</span>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="monitoring-section">
+                <div class="video-container">
+                    <div class="video-header">
+                        <h2>Live Camera Feed</h2>
+                        <div class="privacy-badge">
+                            <span class="privacy-icon">&#128274;</span>
+                            Privacy Protected
+                        </div>
+                    </div>
+
+                    <div class="video-wrapper">
+                        <video id="videoElement" autoplay playsinline></video>
+                        <canvas id="canvasElement"></canvas>
+                        <div class="video-overlay" id="videoOverlay">
+                            <p>Click "Start Monitoring" to begin</p>
+                        </div>
+                    </div>
+
+                    <div class="video-controls">
+                        <button id="startBtn" class="btn btn-primary">
+                            <span class="btn-icon">&#9658;</span>
+                            Start Monitoring
+                        </button>
+                        <button id="stopBtn" class="btn btn-secondary" disabled>
+                            <span class="btn-icon">&#9632;</span>
+                            Stop Monitoring
+                        </button>
+                    </div>
+
+                    <!-- 🔹 VIDEO UPLOAD -->
+                    <div class="video-upload" style="margin-top: 15px; text-align:center;">
+                        <h3 style="margin-bottom: 8px;">Upload Video</h3>
+
+                        <form id="videoUploadForm" enctype="multipart/form-data">
+                            <input id="videoFile" type="file" name="video" accept="video/*"
+                                style="padding: 8px; border: 1px solid #ccc; border-radius: 6px;">
+                            
+                            <button type="submit" class="btn btn-primary" style="margin-left: 10px;">
+                                Upload & Analyze
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- 🔹 VIDEO ANALYSIS RESULT -->
+                    <div id="videoAnalysisResult" style="margin-top: 20px; text-align:center;">
+                        <h3>Video Analysis Result</h3>
+                        <pre id="analysisOutput"
+                             style="background: #ffffff; color:#000; padding: 15px; 
+                                    border-radius: 10px; 
+                                    max-height: 350px; 
+                                    border: 2px solid #444; 
+                                    box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+                                    overflow: auto; text-align: left;">
+No video analyzed yet.
+                        </pre>
+                    </div>
+                </div>
+
+                <!-- 🔹 REALTIME INDICATORS -->
+                <div class="indicators-panel">
+                    <h2>Real-time Indicators</h2>
+
+                    <div class="indicator-card" id="fallIndicator">
+                        <div class="indicator-icon fall-icon">&#9888;</div>
+                        <div class="indicator-info">
+                            <h3>Fall Detection</h3>
+                            <p class="indicator-status">No Fall Detected</p>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="fallConfidence"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="indicator-card" id="aggressionIndicator">
+                        <div class="indicator-icon aggression-icon">&#9889;</div>
+                        <div class="indicator-info">
+                            <h3>Aggression Detection</h3>
+                            <p class="indicator-status">Normal Behavior</p>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="aggressionConfidence"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="indicator-card" id="riskyIndicator">
+                        <div class="indicator-icon risky-icon">&#9888;</div>
+                        <div class="indicator-info">
+                            <h3>Risky Behavior</h3>
+                            <p class="indicator-status">Safe Position</p>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="riskyConfidence"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="indicator-card emotion-card" id="emotionIndicator">
+                        <div class="indicator-icon emotion-icon" id="emotionIcon">&#128528;</div>
+                        <div class="indicator-info">
+                            <h3>Emotion State</h3>
+                            <p class="indicator-status" id="emotionStatus">Neutral</p>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="emotionConfidence"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🔹 ALERTS PANEL -->
+            <div class="alerts-section">
+                <div class="alerts-header">
+                    <h2>Alerts Panel</h2>
+                    <button id="clearAlertsBtn" class="btn btn-small">Clear All</button>
+                </div>
+                <div class="alerts-list" id="alertsList">
+                    <div class="no-alerts">
+                        <span class="no-alerts-icon">&#10003;</span>
+                        <p>No alerts detected</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Smart Privacy-Aware AI/ML Patient Monitoring System</p>
+            <p class="footer-note">All data is processed locally. No faces or frames are stored.</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+
+    <!-- 🔹 VIDEO UPLOAD JS -->
+    <script>
+document.getElementById("videoUploadForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const fileInput = document.getElementById("videoFile");
+    if (!fileInput.files[0]) return;
+
+    const formData = new FormData();
+    formData.append("video", fileInput.files[0]);
+
+    document.getElementById("analysisOutput").textContent = "⏳ Processing video...";
+
+    const response = await fetch("/upload_video", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await response.json();
+
+    // display the JSON
+    document.getElementById("analysisOutput").textContent = JSON.stringify(data, null, 2);
+
+    // FIX: use data.results
+    if (data.results && data.results.length > 0) {
+        const last = data.results[data.results.length - 1];
+
+        updateIndicators(last);
+        updateAlerts(last);
+    }
+});
+
+function updateIndicators(last) {
+    document.querySelector("#fallIndicator .indicator-status").textContent =
+        last.fall_detected ? "Fall Detected!" : "No Fall Detected";
+    document.getElementById("fallConfidence").style.width =
+        (last.fall_confidence * 100) + "%";
+
+    document.querySelector("#aggressionIndicator .indicator-status").textContent =
+        last.aggression ? "Aggression Detected" : "Normal Behavior";
+    document.getElementById("aggressionConfidence").style.width =
+        (last.aggression_confidence * 100) + "%";
+
+    document.querySelector("#riskyIndicator .indicator-status").textContent =
+        last.risky_behavior ? "Risky Behavior" : "Safe Position";
+    document.getElementById("riskyConfidence").style.width =
+        (last.risky_confidence * 100) + "%";
+
+    document.getElementById("emotionStatus").textContent = last.emotion;
+    document.getElementById("emotionConfidence").style.width =
+        (last.emotion_confidence * 100) + "%";
+}
+
+function updateAlerts(last) {
+    const alertBox = document.getElementById("alertsList");
+    alertBox.innerHTML = "";
+
+    if (last.fall_detected)
+        alertBox.innerHTML += `<div class="alert-item danger">⚠️ Fall Detected</div>`;
+
+    if (last.aggression)
+        alertBox.innerHTML += `<div class="alert-item warning">⚡ Aggression Detected</div>`;
+
+    if (last.risky_behavior)
+        alertBox.innerHTML += `<div class="alert-item danger">⚠️ Risky Behavior</div>`;
+
+    if (!last.fall_detected && !last.aggression && !last.risky_behavior) {
+        alertBox.innerHTML = `
+            <div class="no-alerts">
+                <span class="no-alerts-icon">&#10003;</span>
+                <p>No alerts detected</p>
+            </div>`;
+    }
+}
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Smart Patient Monitoring</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">&#128736;</span>
+                <h1>Smart Patient Monitoring</h1>
+            </div>
+            <nav class="nav">
+                <a href="/" class="nav-link">Live Monitor</a>
+                <a href="/dashboard" class="nav-link active">Dashboard</a>
+            </nav>
+            <div class="status-badge" id="systemStatus">
+                <span class="status-dot"></span>
+                <span>System Ready</span>
+            </div>
+        </header>
+
+        <main class="main-content dashboard-content">
+            <h2 class="page-title">System Dashboard</h2>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon events-icon">&#128202;</div>
+                    <div class="stat-info">
+                        <h3>Total Events Today</h3>
+                        <p class="stat-value" id="totalEvents">0</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon emotion-stat-icon" id="lastEmotionIcon">&#128528;</div>
+                    <div class="stat-info">
+                        <h3>Last Detected Emotion</h3>
+                        <p class="stat-value" id="lastEmotion">Neutral</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon health-icon">&#10084;</div>
+                    <div class="stat-info">
+                        <h3>System Health</h3>
+                        <p class="stat-value health-status" id="systemHealth">Healthy</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon monitor-icon">&#128247;</div>
+                    <div class="stat-info">
+                        <h3>Monitoring Status</h3>
+                        <p class="stat-value" id="monitoringStatus">Inactive</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-actions">
+                <a href="/" class="btn btn-primary btn-large">
+                    <span class="btn-icon">&#9658;</span>
+                    Start Monitoring
+                </a>
+                <button id="refreshDashboard" class="btn btn-secondary btn-large">
+                    <span class="btn-icon">&#8635;</span>
+                    Refresh Data
+                </button>
+            </div>
+
+            <div class="recent-alerts-section">
+                <h3>Recent Alerts</h3>
+                <div class="alerts-table-container">
+                    <table class="alerts-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Issue Type</th>
+                                <th>Confidence</th>
+                                <th>Suggested Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alertsTableBody">
+                            <tr class="no-data-row">
+                                <td colspan="4">No recent alerts</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="system-info-section">
+                <h3>System Information</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Last Check:</span>
+                        <span class="info-value" id="lastCheck">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Detection Models:</span>
+                        <span class="info-value">MediaPipe Pose + Face Mesh</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Privacy Mode:</span>
+                        <span class="info-value privacy-enabled">Enabled</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Frame Storage:</span>
+                        <span class="info-value privacy-enabled">Disabled (Privacy)</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Smart Privacy-Aware AI/ML Patient Monitoring System</p>
+            <p class="footer-note">All data is processed locally. No faces or frames are stored.</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            
+            document.getElementById('refreshDashboard').addEventListener('click', loadDashboardData);
+            
+            setInterval(loadDashboardData, 5000);
+        });
+
+        async function loadDashboardData() {
+            try {
+                const statusResponse = await fetch('/api/status');
+                const status = await statusResponse.json();
+                
+                document.getElementById('totalEvents').textContent = status.total_events_today || 0;
+                document.getElementById('lastEmotion').textContent = capitalizeFirst(status.last_emotion || 'neutral');
+                document.getElementById('systemHealth').textContent = capitalizeFirst(status.status || 'healthy');
+                document.getElementById('monitoringStatus').textContent = status.monitoring_active ? 'Active' : 'Inactive';
+                document.getElementById('lastCheck').textContent = formatTime(status.last_check);
+                
+                updateEmotionIcon(status.last_emotion);
+                
+                const alertsResponse = await fetch('/api/alerts?limit=10');
+                const alerts = await alertsResponse.json();
+                
+                updateAlertsTable(alerts);
+                
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        function updateEmotionIcon(emotion) {
+            const iconMap = {
+                'happy': '&#128522;',
+                'sad': '&#128546;',
+                'angry': '&#128544;',
+                'scared': '&#128552;',
+                'neutral': '&#128528;'
+            };
+            document.getElementById('lastEmotionIcon').innerHTML = iconMap[emotion] || iconMap['neutral'];
+        }
+
+        function updateAlertsTable(alerts) {
+            const tbody = document.getElementById('alertsTableBody');
+            
+            if (!alerts || alerts.length === 0) {
+                tbody.innerHTML = '<tr class="no-data-row"><td colspan="4">No recent alerts</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = alerts.reverse().map(alert => `
+                <tr class="alert-row ${getAlertClass(alert.issue)}">
+                    <td>${formatTime(alert.timestamp)}</td>
+                    <td><span class="issue-badge ${getAlertClass(alert.issue)}">${alert.issue}</span></td>
+                    <td>${(alert.confidence * 100).toFixed(0)}%</td>
+                    <td>${alert.action}</td>
+                </tr>
+            `).join('');
+        }
+
+        function getAlertClass(issue) {
+            if (issue.includes('Fall')) return 'alert-critical';
+            if (issue.includes('Aggression')) return 'alert-warning';
+            if (issue.includes('Risky')) return 'alert-caution';
+            return 'alert-info';
+        }
+
+        function capitalizeFirst(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function formatTime(isoString) {
+            if (!isoString) return '-';
+            const date = new Date(isoString);
+            return date.toLocaleTimeString();
+        }
+    </script>
+</body>
+</html>

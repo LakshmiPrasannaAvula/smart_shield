@@ -1,0 +1,145 @@
+Build a complete website project for a “Smart, Privacy-Aware AI/ML Patient Monitoring System.”
+The project must run fully on Replit. Follow ALL instructions carefully.
+
+1. Project Purpose
+
+Create a web-based system that:
+
+Detects falls, aggression, and risky behavior
+
+Provides emotion detection (happy, sad, angry, scared, neutral)
+
+Works using AI/ML video analytics
+
+Protects patient privacy (no real faces stored or displayed)
+
+Reduces staff monitoring load
+
+Improves patient & staff safety
+
+2. Tech Stack Requirements
+
+Use ONLY technologies supported by Replit:
+
+Frontend
+
+HTML, CSS, JavaScript
+
+Modern responsive UI
+
+Dashboard-style layout with cards & indicators
+
+Live camera preview (but blurred/pixelated to ensure privacy)
+
+Realtime alerts panel
+
+Backend
+
+Python (Flask)
+
+Websocket or simple polling for alerts
+
+Serve the ML model and inference API
+
+AI/ML Requirements
+
+Use lightweight, Replit-friendly models:
+
+For fall detection → Use pose-estimation (MediaPipe or OpenCV + heuristics)
+
+For aggression/risky movements → Use body-keypoint velocity + gesture rules
+
+For emotion detection → Use a small TensorFlow or Keras model
+
+Output JSON like:
+{ "fall_detected": false, "aggression": true, "emotion": "angry" }
+
+3. Core Features to Build
+A. Live Monitoring Page
+
+Webcam input (user-controlled)
+
+Privacy filter (pixelate faces)
+
+Realtime indicators:
+
+Fall Detected (red alert)
+
+Aggression Detected (orange alert)
+
+Risky Behavior (yellow alert)
+
+Emotion State (colored label)
+
+B. Alerts Panel
+
+Auto-updating list of risk events
+
+Each alert contains:
+
+Timestamp
+
+Detected issue (Fall / Aggression / Emotion)
+
+Confidence score (0–1)
+
+Suggested action (e.g., “Check patient immediately”)
+
+C. Dashboard
+
+Total events today
+
+Last detected emotion
+
+System health
+
+Button: “Start Monitoring”
+
+D. APIs
+
+Create endpoints:
+
+/api/analyze → receives image frame (base64), returns ML result
+
+/api/alerts → returns stored alerts
+
+/api/status → returns system health
+
+4. Privacy Requirements
+
+Follow these rules:
+
+DO NOT store camera frames
+
+DO NOT store faces
+
+Apply pixelation filter BEFORE sending frames to backend
+
+Only send pose keypoints or low-resolution images to server
+
+5. Folder Structure
+/static
+    /css/style.css
+    /js/app.js
+/templates
+    index.html
+    dashboard.html
+app.py
+ml_utils.py
+requirements.txt
+
+6. Additional Instructions
+
+Provide clean, understandable code
+
+Add comments explaining the ML logic
+
+Ensure everything runs on Replit without GPU
+
+Use very lightweight models or rule-based detection when needed
+
+Connect frontend → backend properly
+
+Automatically generate the CSS so the UI looks modern and professional
+
+Make the entire system work as a functional demo
